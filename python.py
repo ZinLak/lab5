@@ -7,49 +7,70 @@
 
 Вариант 26. F(1) = 1; G(1) = 1; F(n) =(-1)**n * (F(n–1) – G(n–1)), G(n) = F(n–1) + 2*G(n–1) /(2n)!, при n >=2
 """
-
 import time
 
-cache_recursive_F = {}
-cache_recursive_G = {}
+class SingleItemCache:
+    def __init__(self):
+        self.item = None
 
-factorials = {0: 1, 1: 1}
+    def add(self, item):
+        self.item = item
 
-def factorial(n):
-    if n not in factorials:
+    def get(self):
+        return self.item
+
+# Создаем один экземпляр кэша
+cache = SingleItemCache()
+
+def memoize(func):
+    cached_results = {}
+    def wrapper(n, cache):
+        if n not in cached_results:
+            cached_results[n] = func(n, cache)
+        return cached_results[n]
+    return wrapper
+
+@memoize
+def factorial(n, cache):
+    if n == 0:
+        return 1
+    if n != cache.get():
         result = 1
-        for i in range(2, n + 1):
+        for i in range(1, n + 1):
             result *= i
-            factorials[i] = result
-    return factorials[n]
+        cache.add(n)
+        cache.add(result)
+    return cache.get()
 
-def recursive_F(n):
+@memoize
+def recursive_F(n, cache):
     if n == 1:
         return 1
-    if n not in cache_recursive_F:
+    if n != cache.get():
         if n % 2 == 0:
-            cache_recursive_F[n] = (-1) ** 2 * (recursive_F(n - 1) - recursive_G(n - 1))
+            cache.add((-1) ** 2 * (recursive_F(n - 1, cache) - recursive_G(n - 1, cache)))
         else:
-            cache_recursive_F[n] = (-1) ** 1 * (recursive_F(n - 1) - recursive_G(n - 1))
-    return cache_recursive_F[n]
+            cache.add((-1) ** 1 * (recursive_F(n - 1, cache) - recursive_G(n - 1, cache)))
+    return cache.get()
 
-def recursive_G(n):
+@memoize
+def recursive_G(n, cache):
     if n == 1:
         return 1
-    if n not in cache_recursive_G:
-        cache_recursive_G[n] = recursive_F(n - 1) + 2 * recursive_G(n - 1) / factorial(2 * n)
-    return cache_recursive_G[n]
+    if n != cache.get():
+        cache.add(recursive_F(n - 1, cache) + 2 * recursive_G(n - 1, cache) / factorial(2 * n, cache))
+    return cache.get()
 
 def iterative_F(n):
     f, g = 1, 1
     for i in range(2, n + 1):
-        f, g = (-1) ** i * (f - g), f + 2 * g / factorial(2 * i)
+        f, g = (-1) ** i * (f - g), f + 2 * g / factorial(2 * i, cache)
     return f
 
 def iterative_G(n):
     f, g = 1, 1
     for i in range(2, n + 1):
-        f, g = (-1) ** i * (f - g), f + 2 * g / factorial(2 * i)
+        f, g = (-1) ** i * (f - g), f + 2 * g / factorial(2 * i, cache)
     return g
 
 n = int(input('Введите натуральное число: '))
@@ -58,8 +79,8 @@ while not (2 <= n):
     n = int(input('Повторите ввод:'))
 
 start_time = time.time()
-recursive_f_result = recursive_F(n)
-recursive_g_result = recursive_G(n)
+recursive_f_result = recursive_F(n, cache)
+recursive_g_result = recursive_G(n, cache)
 recursive_time = time.time() - start_time
 
 start_time = time.time()
