@@ -19,8 +19,11 @@ class SingleItemCache:
     def get(self):
         return self.item
 
-# Создаем один экземпляр кэша
+# Создаем экземпляр кэша
 cache = SingleItemCache()
+cache_F = SingleItemCache()
+cache_G = SingleItemCache()
+factorials = SingleItemCache()
 
 def memoize(func):
     cached_results = {}
@@ -51,26 +54,32 @@ def recursive_F(n, cache):
             cache.add((-1) ** 2 * (recursive_F(n - 1, cache) - recursive_G(n - 1, cache)))
         else:
             cache.add((-1) ** 1 * (recursive_F(n - 1, cache) - recursive_G(n - 1, cache)))
-    return cache.get()
+        return cache.get()
 
 @memoize
 def recursive_G(n, cache):
     if n == 1:
         return 1
     if n != cache.get():
-        cache.add(recursive_F(n - 1, cache) + 2 * recursive_G(n - 1, cache) / factorial(2 * n, cache))
+        cache.add(recursive_F(n - 1, cache) + 2 * recursive_G(n - 1, cache) / factorial(2 * n, factorials))
     return cache.get()
 
 def iterative_F(n):
     f, g = 1, 1
     for i in range(2, n + 1):
-        f, g = (-1) ** i * (f - g), f + 2 * g / factorial(2 * i, cache)
+        if n % 2 == 0:
+            f, g = (-1) ** 2 * (f - g), f + 2 * g / factorial(2 * i, factorials)
+        else:
+            f, g = (-1) ** 1 * (f - g), f + 2 * g / factorial(2 * i, factorials)
     return f
 
 def iterative_G(n):
     f, g = 1, 1
     for i in range(2, n + 1):
-        f, g = (-1) ** i * (f - g), f + 2 * g / factorial(2 * i, cache)
+        if n % 2 == 0:
+            f, g = (-1) ** 2 * (f - g), f + 2 * g / factorial(2 * i, factorials)
+        else:
+            f, g = (-1) ** 1 * (f - g), f + 2 * g / factorial(2 * i, factorials)
     return g
 
 n = int(input('Введите натуральное число: '))
@@ -79,8 +88,8 @@ while not (2 <= n):
     n = int(input('Повторите ввод:'))
 
 start_time = time.time()
-recursive_f_result = recursive_F(n, cache)
-recursive_g_result = recursive_G(n, cache)
+recursive_f_result = recursive_F(n, cache_F)
+recursive_g_result = recursive_G(n, cache_G)
 recursive_time = time.time() - start_time
 
 start_time = time.time()
